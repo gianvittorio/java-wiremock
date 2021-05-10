@@ -1,22 +1,27 @@
 package com.gianvittorio.javawiremock.web.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class MovieDTO {
-    private String cast;
+    @JsonProperty("movie_id")
+    private Long movieId;
 
-    private Long movie_id;
+    private String cast;
 
     private String name;
 
-    private String releaseDate;
+    @JsonProperty("release_date")
+    private LocalDate releaseDate;
 
     private Integer year;
 }

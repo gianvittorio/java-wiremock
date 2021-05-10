@@ -1,0 +1,6 @@
+com/gianvittorio/javawiremock/constants/MoviesConstants.class
+com/gianvittorio/javawiremock/web/dto/MovieDTO.class
+com/gianvittorio/javawiremock/web/dto/MovieDTO$MovieDTOBuilder.class
+com/gianvittorio/javawiremock/service/MoviesRestClient.class
+com/gianvittorio/javawiremock/exception/MovieErrorResponse.class
+com/gianvittorio/javawiremock/service/impl/MoviesRestClientImpl.class

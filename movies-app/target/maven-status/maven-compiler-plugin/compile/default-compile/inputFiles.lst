@@ -1,0 +1,5 @@
+/home/gianvittorio/Documentos/Projects/Java/java-wiremock/movies-app/src/main/java/com/gianvittorio/javawiremock/constants/MoviesConstants.java
+/home/gianvittorio/Documentos/Projects/Java/java-wiremock/movies-app/src/main/java/com/gianvittorio/javawiremock/service/impl/MoviesRestClientImpl.java
+/home/gianvittorio/Documentos/Projects/Java/java-wiremock/movies-app/src/main/java/com/gianvittorio/javawiremock/exception/MovieErrorResponse.java
+/home/gianvittorio/Documentos/Projects/Java/java-wiremock/movies-app/src/main/java/com/gianvittorio/javawiremock/service/MoviesRestClient.java
+/home/gianvittorio/Documentos/Projects/Java/java-wiremock/movies-app/src/main/java/com/gianvittorio/javawiremock/web/dto/MovieDTO.java
