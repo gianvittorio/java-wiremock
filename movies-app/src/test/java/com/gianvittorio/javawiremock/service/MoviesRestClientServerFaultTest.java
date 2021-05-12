@@ -8,11 +8,17 @@ import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.extension.responsetemplating.ResponseTemplateTransformer;
 import com.github.tomakehurst.wiremock.http.Fault;
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.apache.http.HttpHeaders;
 import org.junit.jupiter.api.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.tcp.TcpClient;
 
 import java.util.List;
 
@@ -52,7 +58,15 @@ public class MoviesRestClientServerFaultTest {
     public void setUp() {
         wireMockServer.resetAll();
 
+        TcpClient tcpClient = TcpClient.create()
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000)
+                .doOnConnected(connection -> {
+                    connection.addHandlerLast(new ReadTimeoutHandler(5))
+                            .addHandlerLast(new WriteTimeoutHandler(5));
+                });
+
         WebClient webClient = WebClient.builder()
+                .clientConnector(new ReactorClientHttpConnector(HttpClient.from(tcpClient)))
                 .baseUrl(String.format("http://localhost:%d/", port))
                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                 .build();
@@ -123,7 +137,7 @@ public class MoviesRestClientServerFaultTest {
     }
 
     @Test
-    @DisplayName("Must return 503 Service Unavailable.")
+    @DisplayName("Must close connection unexpectedly.")
     public void retrieveAllMoviesRandomDataThenCloseTest() {
         // Given
         wireMockServer.stubFor(
@@ -131,6 +145,46 @@ public class MoviesRestClientServerFaultTest {
                         .willReturn(
                                 aResponse()
                                         .withFault(Fault.RANDOM_DATA_THEN_CLOSE)
+                        )
+        );
+
+        // When
+        Throwable throwable = catchThrowable(() -> moviesRestClient.retrieveAllMovies());
+
+        // Then
+        assertThat(throwable)
+                .isInstanceOf(MovieErrorResponse.class);
+    }
+
+    @Test
+    @DisplayName("Must close connection unexpectedly.")
+    public void retrieveAllMoviesFixedDelayTest() {
+        // Given
+        wireMockServer.stubFor(
+                get(anyUrl())
+                        .willReturn(
+                                ok()
+                                        .withFixedDelay(10_000)
+                        )
+        );
+
+        // When
+        Throwable throwable = catchThrowable(() -> moviesRestClient.retrieveAllMovies());
+
+        // Then
+        assertThat(throwable)
+                .isInstanceOf(MovieErrorResponse.class);
+    }
+
+    @Test
+    @DisplayName("Must close connection unexpectedly.")
+    public void retrieveAllMoviesRandomDelayTest() {
+        // Given
+        wireMockServer.stubFor(
+                get(anyUrl())
+                        .willReturn(
+                                ok()
+                                        .withUniformRandomDelay(6_000, 10_000)
                         )
         );
 
