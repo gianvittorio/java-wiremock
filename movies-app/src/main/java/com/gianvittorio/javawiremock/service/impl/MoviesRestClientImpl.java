@@ -156,4 +156,29 @@ public class MoviesRestClientImpl implements MoviesRestClient {
             throw new MovieErrorResponse(ex);
         }
     }
+
+    @Override
+    public String deleteMovieByName(String movieName) {
+        try {
+            String uri = UriComponentsBuilder.fromUriString(MoviesConstants.GET_MOVIE_BY_NAME_V1)
+                    .queryParam("movie_name", movieName)
+                    .buildAndExpand()
+                    .toUriString();
+
+            webClient.delete()
+                    .uri(uri)
+                    .accept(MediaType.TEXT_PLAIN)
+                    .retrieve()
+                    .bodyToMono(Void.class)
+                    .block();
+        } catch (WebClientResponseException e) {
+            log.error("WebClientResponseException in deleteMovieByName. Status code is {} and the message is {}", e.getRawStatusCode(), e.getResponseBodyAsString());
+            throw new MovieErrorResponse(e.getStatusText(), e);
+        } catch (Exception ex) {
+            log.error("Exception in deleteMovieByName and the message is {}", ex);
+            throw new MovieErrorResponse(ex);
+        }
+
+        return "Movie Deleted Successfully";
+    }
 }

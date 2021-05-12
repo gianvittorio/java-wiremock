@@ -19,4 +19,6 @@ public interface MoviesRestClient {
     MovieDTO updateMovie(Long movieId, MovieDTO movieDTO);
 
     String deleteMovieById(Long movieId);
+
+    String deleteMovieByName(String name);
 }
