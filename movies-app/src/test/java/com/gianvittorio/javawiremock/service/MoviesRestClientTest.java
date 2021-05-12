@@ -58,6 +58,14 @@ public class MoviesRestClientTest {
         moviesRestClient = new MoviesRestClientImpl(webClient);
 
         wireMockServer.resetAll();
+
+        wireMockServer.stubFor(
+                any(anyUrl())
+                        .willReturn(
+                                aResponse()
+                                        .proxiedFrom("http://localhost:8081")
+                        )
+        );
     }
 
     @Test
@@ -618,6 +626,48 @@ public class MoviesRestClientTest {
                 .withRequestBody(matchingJsonPath("$.cast", containing("Tom")))
         );
 
+        wireMockServer.verify(exactly(1),
+                postRequestedFor(urlPathEqualTo(MoviesConstants.ADD_MOVIE_V1))
+                        .withRequestBody(matchingJsonPath("$.name", equalTo("Toy Story 5")))
+                        .withRequestBody(matchingJsonPath("$.cast", containing("Tom")))
+        );
+
         wireMockServer.verify(exactly(1), deleteRequestedFor(urlEqualTo(MoviesConstants.GET_MOVIE_BY_NAME_V1.concat("?movie_name=Toy%20Story%204"))));
+    }
+
+    @Test
+    @DisplayName("Must delete movie by name.")
+    public void deleteMovieByNameSelectiveProxyingTest() {
+        // Given
+        MovieDTO movieDTO = MovieDTO.builder()
+                .movieId(null)
+                .name("Toy Story 5")
+                .cast("Tom Hanks, Tim Allen")
+                .year(2019)
+                .releaseDate(LocalDate.of(2019, 06, 20))
+                .build();
+
+        String expectedErrorMessage = "Movie Deleted Successfully";
+
+        MovieDTO addedMovie = moviesRestClient.addMovie(movieDTO);
+
+        wireMockServer.stubFor(
+                delete(urlEqualTo(MoviesConstants.GET_MOVIE_BY_NAME_V1.concat("?movie_name=Toy%20Story%205")))
+                        .willReturn(
+                                aResponse()
+                                        .withStatus(HttpStatus.OK.value())
+                                        .withHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                        )
+        );
+
+        // When
+        String responseMessage = moviesRestClient.deleteMovieByName(addedMovie.getName());
+
+        // Then
+        assertThat(responseMessage)
+                .isNotNull()
+                .isEqualTo(expectedErrorMessage);
+
+        wireMockServer.verify(exactly(1), deleteRequestedFor(urlEqualTo(MoviesConstants.GET_MOVIE_BY_NAME_V1.concat("?movie_name=Toy%20Story%205"))));
     }
 }
