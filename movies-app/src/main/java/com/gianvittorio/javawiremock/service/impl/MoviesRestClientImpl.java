@@ -25,13 +25,21 @@ public class MoviesRestClientImpl implements MoviesRestClient {
 
     @Override
     public List<MovieDTO> retrieveAllMovies() {
-        return webClient.get()
-                .uri(MoviesConstants.GET_ALL_MOVIES_V1)
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .bodyToFlux(MovieDTO.class)
-                .collectList()
-                .block();
+        try {
+            return webClient.get()
+                    .uri(MoviesConstants.GET_ALL_MOVIES_V1)
+                    .accept(MediaType.APPLICATION_JSON)
+                    .retrieve()
+                    .bodyToFlux(MovieDTO.class)
+                    .collectList()
+                    .block();
+        } catch (WebClientResponseException e) {
+            log.error("WebClientResponseException in retrieveAllMovies. Status code is {} and the message is {}", e.getRawStatusCode(), e.getResponseBodyAsString());
+            throw new MovieErrorResponse(e.getStatusText(), e);
+        } catch (Exception ex) {
+            log.error("Exception in retrieveAllMovies and the message is {}", ex);
+            throw new MovieErrorResponse(ex);
+        }
     }
 
     @Override
